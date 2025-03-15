@@ -9,9 +9,14 @@ HEIGHT: int = 10
 MARGIN: int = 2 * BOX_SIZE
 FILL_PERCENT: float = 0.65
 COLORS = {
-    "DEFAULT" : color.WHITE,
+    "UNKNOWN" : color.WHITE,
     "MINED" : color.BLUE,
     "FLAGGED" : color.GRAY
+}
+STATES = {
+    "UNKNOWN" : 0,
+    "MINED" : 1,
+    "FLAGGED" : -1
 }
 
 class Tile(boards.GameCell):
@@ -19,9 +24,9 @@ class Tile(boards.GameCell):
     def __init__(self, board: "Game", i: int, j: int, mineable: bool):
         self.board: Game = board
         self.mineable: bool = mineable
-        self.empty: bool = True
+        self.state: int = STATES["UNKNOWN"]
         self.init_gamecell(board, i, j)
-        self.set_color(COLORS["DEFAULT"])
+        self.set_color(COLORS["UNKNOWN"])
         
         
     def handleMistake(self) -> None:
@@ -30,9 +35,23 @@ class Tile(boards.GameCell):
     
     
     def mine(self) -> None:
-        # TODO: Handle self when player attempts to mine this tile
-        raise Exception("'mine' is not fully implemented")
-    
+        # Handle mined tiles
+        if self.state == STATES["MINED"]:
+            return
+        
+        # Handle flagged tiles
+        if self.state == STATES["FLAGGED"]:
+            return
+        
+        # Handle mistake
+        if not self.mineable:
+            self.handleMistake()
+            return
+        
+        # Mine this tile
+        self.state = STATES["MINED"]
+        self.set_color(COLORS["MINED"])
+        
     
     def flag(self) -> None:
         # TODO: Handle self when player attempts to flag this tile
