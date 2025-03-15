@@ -3,31 +3,59 @@ from gasp import boards # type: ignore
 from gasp import color # type: ignore
 import random
 
-BOX_SIZE = 30
-WIDTH = 15
-HEIGHT = 10
-MARGIN = 2 * BOX_SIZE
+BOX_SIZE: int = 30
+WIDTH: int = 15
+HEIGHT: int = 10
+MARGIN: int = 2 * BOX_SIZE
+FILL_PERCENT: float = 0.65
 COLORS = {
     "DEFAULT" : color.WHITE,
     "MINED" : color.BLUE,
     "FLAGGED" : color.GRAY
 }
+
+class Tile(boards.GameCell):
+    
+    def __init__(self, board: "Game", i: int, j: int, mineable: bool):
+        self.board: Game = board
+        self.mineable: bool = mineable
+        self.empty: bool = True
+        self.init_gamecell(board, i, j)
+        self.set_color(COLORS["DEFAULT"])
+        
+        
+    def handleMistake(self) -> None:
+        # TODO: Handle self when player makes mistake
+        raise Exception("'handleMistake' is not fully implemented")
+    
+    
+    def mine(self) -> None:
+        # TODO: Handle self when player attempts to mine this tile
+        raise Exception("'mine' is not fully implemented")
+    
+    
+    def flag(self) -> None:
+        # TODO: Handle self when player attempts to flag this tile
+        raise Exception("'flag' is not fully implemented")
     
 
+
 class Game(boards.SingleBoard):
+    
     def __init__(self):
         self.init_singleboard((MARGIN, MARGIN), WIDTH, HEIGHT, BOX_SIZE)
         self.draw_all_outlines()
         
-    def new_gamecell(self, i: int, j: int):
-        return Tile(self, i, j)
         
-
-
-class Tile(boards.GameCell):
-    def __init__(self, board: Game, i: int, j: int):
-        self.init_gamecell(board, i, j)
-        self.set_color(COLORS["DEFAULT"])
+    def new_gamecell(self, i: int, j: int) -> Tile:
+        mineable: bool = random.random() <= FILL_PERCENT
+        return Tile(self, i, j, mineable)
+        
+        
+    def mouse_up(self, pos: tuple[int, int], button: int):
+        # TODO: Handle click
+        raise Exception("'mouse_up' is not fully implemented")
+        
 
 
 
