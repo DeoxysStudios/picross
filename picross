@@ -14,7 +14,8 @@ COLORS = {
     "MINED" : color.BLUE,
     "FLAGGED" : color.LIGHTGRAY,
     "MISTAKE" : color.RED,
-    "FLAG": color.GRAY
+    "FLAG": color.GRAY,
+    "NUMS": color.WHITE
 }
 STATES = {
     "UNKNOWN" : 0,
@@ -82,7 +83,17 @@ class Tile(boards.GameCell):
         self.set_color(COLORS["FLAGGED"])
         return
     
-
+    
+    
+class Number():
+    def __init__(self, board: "Game", i: int, j: int, value: int):
+        self.value = value
+        self.board = board
+        self.i, self.j = i, j
+        x, y = self.board.cell_to_coords(self.i, self.j)
+        self.text = games.Text(self.board, x + BOX_SIZE / 2, y + BOX_SIZE / 2, str(value), BOX_SIZE, COLORS["NUMS"])
+    
+    
 
 class Game(boards.SingleBoard):
     
@@ -90,6 +101,7 @@ class Game(boards.SingleBoard):
         self.init_singleboard((MARGIN_X, MARGIN_Y), WIDTH, HEIGHT, BOX_SIZE)
         self.draw_all_outlines()
         self.grid: list[list[Tile]]
+        Number(self, -1, 1, 4)
         
         
     def new_gamecell(self, i: int, j: int) -> Tile:
