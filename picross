@@ -4,11 +4,11 @@ from gasp import color # type: ignore
 import random
 
 BOX_SIZE: int = 30
-WIDTH: int = 15
+WIDTH: int = 10
 HEIGHT: int = 10
 MARGIN_X = WIDTH // 2 * BOX_SIZE
 MARGIN_Y = HEIGHT // 2 * BOX_SIZE
-FILL_PERCENT: float = 0.65
+FILL_PERCENT: float = 0.6
 COLORS = {
     "UNKNOWN" : color.WHITE,
     "MINED" : color.BLUE,
@@ -102,20 +102,31 @@ class Game(boards.SingleBoard):
         self.draw_all_outlines()
         self.grid: list[list[Tile]]
         self.handleAllNums()
+        self.previous_mouse_positions: set[tuple[int, int]] = set[tuple[int, int]]()
         
         
     def new_gamecell(self, i: int, j: int) -> Tile:
         mineable: bool = random.random() <= FILL_PERCENT
         return Tile(self, i, j, mineable)
-        
-        
-    def mouse_up(self, pos: tuple[int, int], button: int) -> None:
-        x, y = pos
+    
+    def tick(self):
+        buttons = self.mouse_buttons()
+        button: int = 0
+        if not buttons[0] and not buttons[2]:
+            self.previous_mouse_positions.clear()
+            return
+        if buttons[0] and buttons[2]:
+            return
+        if buttons[2]:
+            button = 2
+        x, y = self.mouse_position()
         i, j = self.coords_to_cell(x, y)
         assert isinstance(i, int) and isinstance(j, int)
         if not self.on_board(i, j):
             return
-        
+        if (i, j) in self.previous_mouse_positions:
+            return
+        self.previous_mouse_positions.add((i, j))
         # Left Click
         if button == 0:
             self.grid[i][j].mine()
