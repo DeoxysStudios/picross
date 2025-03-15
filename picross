@@ -14,9 +14,11 @@ COLORS = {
     "MINED" : color.BLUE,
     "FLAGGED" : color.LIGHTGRAY,
     "MISTAKE" : color.RED,
-    "FLAG": color.GRAY,
-    "NUMS": color.WHITE,
-    "CROSSOUT": color.GRAY
+    "FLAG" : color.GRAY,
+    "NUMS" : color.WHITE,
+    "CROSSOUT" : color.GRAY,
+    "WIN" : color.YELLOW,
+    "LOSE" : color.RED
 }
 STATES = {
     "UNKNOWN" : 0,
@@ -68,6 +70,8 @@ class Tile(boards.GameCell):
         self.changeable = False
         self.set_color(COLORS["MINED"])
         self.board.handleCrossouts(self.j, self.i)
+        self.board.progress += 1
+        self.board.checkWinCondition()
         return
         
     
@@ -109,6 +113,7 @@ class Number():
 class Game(boards.SingleBoard):
     
     def __init__(self):
+        self.mineableTiles: int = 0
         self.init_singleboard((MARGIN_X, MARGIN_Y), WIDTH, HEIGHT, BOX_SIZE)
         self.draw_all_outlines()
         self.grid: list[list[Tile]]
@@ -116,10 +121,17 @@ class Game(boards.SingleBoard):
         self.colNums: list[list[Number]] = []
         self.handleAllNums()
         self.previous_mouse_positions: set[tuple[int, int]] = set[tuple[int, int]]()
-        
+        self.progress: int = 0
+        x1, y1 = self.cell_to_coords(WIDTH - 1, HEIGHT + 1)
+        x2, y2 = self.cell_to_coords(0, HEIGHT + 1)
+        x = (x1 + x2) / 2
+        y = (y1 + y2) / 2
+        self.game_over_text = games.Text(self, x + BOX_SIZE / 2, y + BOX_SIZE / 2, "", BOX_SIZE, COLORS["WIN"])
         
     def new_gamecell(self, i: int, j: int) -> Tile:
         mineable: bool = random.random() <= FILL_PERCENT
+        if mineable:
+            self.mineableTiles += 1
         return Tile(self, i, j, mineable)
     
     def tick(self):
@@ -166,6 +178,10 @@ class Game(boards.SingleBoard):
             m = len(colNums)
             for j in range(m):
                 self.colNums[-1].append(Number(self, i, j - m, colNums[j]))
+                
+    def checkWinCondition(self):
+        if self.progress == self.mineableTiles:
+            self.game_over_text.set_text("YOU WIN!")
     
     
     def getRowNums(self, rowIndex: int) -> list[int]:
