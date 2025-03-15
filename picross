@@ -179,6 +179,15 @@ class Game(boards.SingleBoard):
             for j in range(m):
                 self.colNums[-1].append(Number(self, i, j - m, colNums[j]))
                 
+        for j in range(HEIGHT):
+            if self.rowNums[j][0].value == 0:
+                self.grid[0][j].flag()
+        for i in range(WIDTH):
+            if self.colNums[i][0].value == 0:
+                self.grid[i][0].flag()        
+        
+                
+                
     def checkWinCondition(self):
         if self.progress == self.mineableTiles:
             self.game_over_text.set_text("YOU WIN!")
