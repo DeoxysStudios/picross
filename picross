@@ -11,7 +11,9 @@ FILL_PERCENT: float = 0.65
 COLORS = {
     "UNKNOWN" : color.WHITE,
     "MINED" : color.BLUE,
-    "FLAGGED" : color.GRAY
+    "FLAGGED" : color.LIGHTGRAY,
+    "MISTAKE" : color.RED,
+    "FLAG": color.GRAY
 }
 STATES = {
     "UNKNOWN" : 0,
@@ -23,10 +25,14 @@ class Tile(boards.GameCell):
     
     def __init__(self, board: "Game", i: int, j: int, mineable: bool):
         self.board: Game = board
+        self.i, self.j = i, j
         self.mineable: bool = mineable
+        self.changeable: bool = True
         self.state: int = STATES["UNKNOWN"]
         self.init_gamecell(board, i, j)
         self.set_color(COLORS["UNKNOWN"])
+        x, y = self.board.cell_to_coords(self.i, self.j)
+        self.mark = games.Text(self.board, x + BOX_SIZE / 2, y + BOX_SIZE / 2, "", BOX_SIZE, COLORS["FLAG"])
         
         
     def handleMistake(self) -> None:
@@ -35,8 +41,8 @@ class Tile(boards.GameCell):
     
     
     def mine(self) -> None:
-        # Handle mined tiles
-        if self.state == STATES["MINED"]:
+        # Handle unchangeable tiles
+        if not self.changeable:
             return
         
         # Handle flagged tiles
@@ -50,12 +56,26 @@ class Tile(boards.GameCell):
         
         # Mine this tile
         self.state = STATES["MINED"]
+        self.changeable = False
         self.set_color(COLORS["MINED"])
         
     
-    def flag(self) -> None:
-        # TODO: Handle self when player attempts to flag this tile
-        raise Exception("'flag' is not fully implemented")
+    def flag(self, isMistake: bool = False) -> None:
+        # Handle unchangeable tiles
+        if not self.changeable:
+            return
+        
+        # Handle flagged tiles
+        if self.state == STATES["FLAGGED"]:
+            self.state = STATES["UNKNOWN"]
+            self.mark.set_text("")
+            self.set_color(COLORS["UNKNOWN"])
+            return
+        
+        # Flag this tile
+        self.state = STATES["FLAGGED"]
+        self.mark.set_text("X")
+        self.set_color(COLORS["FLAGGED"])
     
 
 
