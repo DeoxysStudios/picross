@@ -4,15 +4,30 @@ from gasp import color # type: ignore
 import random
 
 BOX_SIZE = 30
-WIDTH = 10
-HEIGHT = 16
+WIDTH = 15
+HEIGHT = 10
 MARGIN = 2 * BOX_SIZE
-
+COLORS = {
+    "DEFAULT" : color.WHITE,
+    "MINED" : color.BLUE,
+    "FLAGGED" : color.GRAY
+}
+    
 
 class Game(boards.SingleBoard):
     def __init__(self):
         self.init_singleboard((MARGIN, MARGIN), WIDTH, HEIGHT, BOX_SIZE)
+        self.draw_all_outlines()
         
+    def new_gamecell(self, i: int, j: int):
+        return Tile(self, i, j)
+        
+
+
+class Tile(boards.GameCell):
+    def __init__(self, board: Game, i: int, j: int):
+        self.init_gamecell(board, i, j)
+        self.set_color(COLORS["DEFAULT"])
 
 
 
