@@ -15,7 +15,8 @@ COLORS = {
     "FLAGGED" : color.LIGHTGRAY,
     "MISTAKE" : color.RED,
     "FLAG": color.GRAY,
-    "NUMS": color.WHITE
+    "NUMS": color.WHITE,
+    "CROSSOUT": color.GRAY
 }
 STATES = {
     "UNKNOWN" : 0,
@@ -38,8 +39,12 @@ class Tile(boards.GameCell):
         
         
     def handleMistake(self) -> None:
+        if self.mineable:
+            self.mine()
+        else:
+            self.flag()
         self.mark.set_color(COLORS["MISTAKE"])
-        self.flag()
+        self.mark.set_text("X")
         self.changeable = False
         return
     
@@ -62,6 +67,7 @@ class Tile(boards.GameCell):
         self.state = STATES["MINED"]
         self.changeable = False
         self.set_color(COLORS["MINED"])
+        self.board.handleCrossouts(self.j, self.i)
         return
         
     
@@ -70,17 +76,17 @@ class Tile(boards.GameCell):
         if not self.changeable:
             return
         
-        # Handle flagged tiles
-        if self.state == STATES["FLAGGED"]:
-            self.state = STATES["UNKNOWN"]
-            self.mark.set_text("")
-            self.set_color(COLORS["UNKNOWN"])
+        # Handle mistake
+        if self.mineable:
+            self.handleMistake()
             return
         
         # Flag this tile
         self.state = STATES["FLAGGED"]
+        self.changeable = False
         self.mark.set_text("X")
         self.set_color(COLORS["FLAGGED"])
+        self.board.handleCrossouts(self.j, self.i)
         return
     
     
@@ -92,6 +98,11 @@ class Number():
         self.i, self.j = i, j
         x, y = self.board.cell_to_coords(self.i, self.j)
         self.text = games.Text(self.board, x + BOX_SIZE / 2, y + BOX_SIZE / 2, str(value), BOX_SIZE, COLORS["NUMS"])
+        
+    def crossout(self) -> None:
+        self.text.set_color(COLORS["CROSSOUT"])
+        
+        
     
     
 
@@ -101,6 +112,8 @@ class Game(boards.SingleBoard):
         self.init_singleboard((MARGIN_X, MARGIN_Y), WIDTH, HEIGHT, BOX_SIZE)
         self.draw_all_outlines()
         self.grid: list[list[Tile]]
+        self.rowNums: list[list[Number]] = []
+        self.colNums: list[list[Number]] = []
         self.handleAllNums()
         self.previous_mouse_positions: set[tuple[int, int]] = set[tuple[int, int]]()
         
@@ -141,23 +154,25 @@ class Game(boards.SingleBoard):
     
     def handleAllNums(self) -> None:
         for j in range(HEIGHT):
+            self.rowNums.append([])
             rowNums = self.getRowNums(j)
             n = len(rowNums)
             for i in range(n):
-                Number(self, i - n, j, rowNums[i])
+                self.rowNums[-1].append(Number(self, i - n, j, rowNums[i]))
                 
         for i in range(WIDTH):
+            self.colNums.append([])
             colNums = self.getColNums(i)
             m = len(colNums)
             for j in range(m):
-                Number(self, i, j - m, colNums[j])
+                self.colNums[-1].append(Number(self, i, j - m, colNums[j]))
     
     
-    def getRowNums(self, rowNum: int) -> list[int]:
+    def getRowNums(self, rowIndex: int) -> list[int]:
         outnums: list[int] = []
         total: int = 0
         for i in range(WIDTH):
-            if self.grid[i][rowNum].mineable:
+            if self.grid[i][rowIndex].mineable:
                 total += 1
             elif total > 0:
                 outnums.append(total)
@@ -167,11 +182,11 @@ class Game(boards.SingleBoard):
         return outnums
     
     
-    def getColNums(self, colNum: int) -> list[int]:
+    def getColNums(self, colIndex: int) -> list[int]:
         outnums: list[int] = []
         total: int = 0
         for j in range(HEIGHT):
-            if self.grid[colNum][j].mineable:
+            if self.grid[colIndex][j].mineable:
                 total += 1
             elif total > 0:
                 outnums.append(total)
@@ -179,6 +194,72 @@ class Game(boards.SingleBoard):
         if total > 0 or len(outnums) == 0:
             outnums.append(total)
         return outnums
+    
+    
+    def handleCrossouts(self, rowIndex: int, colIndex: int) -> None:
+        k: int = 0
+        total: int = 0
+        for i in range(0, WIDTH, 1):
+            if self.grid[i][rowIndex].state == STATES["UNKNOWN"]:
+                break
+            if self.grid[i][rowIndex].state == STATES["MINED"]:
+                total += 1
+                if i + 1 < WIDTH and total == self.rowNums[rowIndex][k].value:
+                    self.grid[i + 1][rowIndex].flag()
+                    self.rowNums[rowIndex][k].crossout()
+                    k += 1
+            if self.grid[i][rowIndex].state == STATES["FLAGGED"]:
+                total = 0
+                
+        k: int = -1
+        total: int = 0
+        for i in range(WIDTH - 1, -1, -1):
+            if self.grid[i][rowIndex].state == STATES["UNKNOWN"]:
+                break
+            if self.grid[i][rowIndex].state == STATES["MINED"]:
+                total += 1
+                if i - 1 > -1 and total == self.rowNums[rowIndex][k].value:
+                    self.grid[i - 1][rowIndex].flag()
+                    self.rowNums[rowIndex][k].crossout()
+                    k -= 1
+            if self.grid[i][rowIndex].state == STATES["FLAGGED"]:
+                total = 0
+                
+        k: int = 0
+        total: int = 0
+        for j in range(0, HEIGHT, 1):
+            if self.grid[colIndex][j].state == STATES["UNKNOWN"]:
+                break
+            if self.grid[colIndex][j].state == STATES["MINED"]:
+                total += 1
+                if j + 1 < HEIGHT and total == self.colNums[colIndex][k].value:
+                    self.grid[colIndex][j + 1].flag()
+                    self.colNums[colIndex][k].crossout()
+                    k += 1
+            if self.grid[colIndex][j].state == STATES["FLAGGED"]:
+                total = 0
+                
+        k: int = -1
+        total: int = 0
+        for j in range(HEIGHT - 1, -1, -1):
+            if self.grid[colIndex][j].state == STATES["UNKNOWN"]:
+                break
+            if self.grid[colIndex][j].state == STATES["MINED"]:
+                total += 1
+                if j - 1 < HEIGHT and total == self.colNums[colIndex][k].value:
+                    self.grid[colIndex][j - 1].flag()
+                    self.colNums[colIndex][k].crossout()
+                    k -= 1
+            if self.grid[colIndex][j].state == STATES["FLAGGED"]:
+                total = 0
+                
+        
+            
+                
+            
+            
+            
+        
         
 
 
