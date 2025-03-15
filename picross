@@ -36,8 +36,10 @@ class Tile(boards.GameCell):
         
         
     def handleMistake(self) -> None:
-        # TODO: Handle self when player makes mistake
-        raise Exception("'handleMistake' is not fully implemented")
+        self.mark.set_color(COLORS["MISTAKE"])
+        self.changeable = False
+        self.flag()
+        return
     
     
     def mine(self) -> None:
@@ -58,6 +60,7 @@ class Tile(boards.GameCell):
         self.state = STATES["MINED"]
         self.changeable = False
         self.set_color(COLORS["MINED"])
+        return
         
     
     def flag(self, isMistake: bool = False) -> None:
@@ -76,6 +79,7 @@ class Tile(boards.GameCell):
         self.state = STATES["FLAGGED"]
         self.mark.set_text("X")
         self.set_color(COLORS["FLAGGED"])
+        return
     
 
 
