@@ -4,11 +4,12 @@ from gasp import color # type: ignore
 import random
 
 BOX_SIZE: int = 30
-WIDTH: int = 10
-HEIGHT: int = 10
+WIDTH: int = 15
+HEIGHT: int = 15
 MARGIN_X = WIDTH // 2 * BOX_SIZE
 MARGIN_Y = HEIGHT // 2 * BOX_SIZE
 FILL_PERCENT: float = 0.6
+MAX_MISTAKES: int = 3
 COLORS = {
     "UNKNOWN" : color.WHITE,
     "MINED" : color.BLUE,
@@ -41,6 +42,7 @@ class Tile(boards.GameCell):
         
         
     def handleMistake(self) -> None:
+        self.board.health -= 1
         if self.mineable:
             self.mine()
         else:
@@ -48,6 +50,7 @@ class Tile(boards.GameCell):
         self.mark.set_color(COLORS["MISTAKE"])
         self.mark.set_text("X")
         self.changeable = False
+        self.board.checkLoseCondition()
         return
     
     
@@ -114,6 +117,7 @@ class Game(boards.SingleBoard):
     
     def __init__(self):
         self.mineableTiles: int = 0
+        self.health: int = MAX_MISTAKES
         self.init_singleboard((MARGIN_X, MARGIN_Y), WIDTH, HEIGHT, BOX_SIZE)
         self.draw_all_outlines()
         self.grid: list[list[Tile]]
@@ -191,6 +195,14 @@ class Game(boards.SingleBoard):
     def checkWinCondition(self):
         if self.progress == self.mineableTiles:
             self.game_over_text.set_text("YOU WIN!")
+            
+    def checkLoseCondition(self):
+        if self.health == 0:
+            self.game_over_text.set_color(COLORS["LOSE"])
+            self.game_over_text.set_text("YOU LOST!")
+            for i in range(WIDTH):
+                for j in range(HEIGHT):
+                    self.grid[i][j].changeable = False
     
     
     def getRowNums(self, rowIndex: int) -> list[int]:
