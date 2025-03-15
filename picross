@@ -2,3 +2,19 @@ from gasp import games # type: ignore
 from gasp import boards # type: ignore
 from gasp import color # type: ignore
 import random
+
+BOX_SIZE = 30
+WIDTH = 10
+HEIGHT = 16
+MARGIN = 2 * BOX_SIZE
+
+
+class Game(boards.SingleBoard):
+    def __init__(self):
+        self.init_singleboard((MARGIN, MARGIN), WIDTH, HEIGHT, BOX_SIZE)
+        
+
+
+
+game = Game()
+game.mainloop()
