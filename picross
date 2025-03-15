@@ -6,7 +6,8 @@ import random
 BOX_SIZE: int = 30
 WIDTH: int = 15
 HEIGHT: int = 10
-MARGIN: int = 2 * BOX_SIZE
+MARGIN_X = WIDTH // 2 * BOX_SIZE
+MARGIN_Y = HEIGHT // 2 * BOX_SIZE
 FILL_PERCENT: float = 0.65
 COLORS = {
     "UNKNOWN" : color.WHITE,
@@ -37,8 +38,8 @@ class Tile(boards.GameCell):
         
     def handleMistake(self) -> None:
         self.mark.set_color(COLORS["MISTAKE"])
-        self.changeable = False
         self.flag()
+        self.changeable = False
         return
     
     
@@ -63,7 +64,7 @@ class Tile(boards.GameCell):
         return
         
     
-    def flag(self, isMistake: bool = False) -> None:
+    def flag(self) -> None:
         # Handle unchangeable tiles
         if not self.changeable:
             return
@@ -86,7 +87,7 @@ class Tile(boards.GameCell):
 class Game(boards.SingleBoard):
     
     def __init__(self):
-        self.init_singleboard((MARGIN, MARGIN), WIDTH, HEIGHT, BOX_SIZE)
+        self.init_singleboard((MARGIN_X, MARGIN_Y), WIDTH, HEIGHT, BOX_SIZE)
         self.draw_all_outlines()
         self.grid: list[list[Tile]]
         
