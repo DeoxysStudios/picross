@@ -101,7 +101,7 @@ class Game(boards.SingleBoard):
         self.init_singleboard((MARGIN_X, MARGIN_Y), WIDTH, HEIGHT, BOX_SIZE)
         self.draw_all_outlines()
         self.grid: list[list[Tile]]
-        Number(self, -1, 1, 4)
+        self.handleAllNums()
         
         
     def new_gamecell(self, i: int, j: int) -> Tile:
@@ -126,6 +126,48 @@ class Game(boards.SingleBoard):
             self.grid[i][j].flag()
             return
         return
+    
+    
+    def handleAllNums(self) -> None:
+        for j in range(HEIGHT):
+            rowNums = self.getRowNums(j)
+            n = len(rowNums)
+            for i in range(n):
+                Number(self, i - n, j, rowNums[i])
+                
+        for i in range(WIDTH):
+            colNums = self.getColNums(i)
+            m = len(colNums)
+            for j in range(m):
+                Number(self, i, j - m, colNums[j])
+    
+    
+    def getRowNums(self, rowNum: int) -> list[int]:
+        outnums: list[int] = []
+        total: int = 0
+        for i in range(WIDTH):
+            if self.grid[i][rowNum].mineable:
+                total += 1
+            elif total > 0:
+                outnums.append(total)
+                total = 0
+        if total > 0 or len(outnums) == 0:
+            outnums.append(total)
+        return outnums
+    
+    
+    def getColNums(self, colNum: int) -> list[int]:
+        outnums: list[int] = []
+        total: int = 0
+        for j in range(HEIGHT):
+            if self.grid[colNum][j].mineable:
+                total += 1
+            elif total > 0:
+                outnums.append(total)
+                total = 0
+        if total > 0 or len(outnums) == 0:
+            outnums.append(total)
+        return outnums
         
 
 
