@@ -204,8 +204,9 @@ class Game(boards.SingleBoard):
                 break
             if self.grid[i][rowIndex].state == STATES["MINED"]:
                 total += 1
-                if i + 1 < WIDTH and total == self.rowNums[rowIndex][k].value:
-                    self.grid[i + 1][rowIndex].flag()
+                if total == self.rowNums[rowIndex][k].value:
+                    if i + 1 < WIDTH:
+                        self.grid[i + 1][rowIndex].flag()
                     self.rowNums[rowIndex][k].crossout()
                     k += 1
             if self.grid[i][rowIndex].state == STATES["FLAGGED"]:
@@ -218,8 +219,9 @@ class Game(boards.SingleBoard):
                 break
             if self.grid[i][rowIndex].state == STATES["MINED"]:
                 total += 1
-                if i - 1 > -1 and total == self.rowNums[rowIndex][k].value:
-                    self.grid[i - 1][rowIndex].flag()
+                if total == self.rowNums[rowIndex][k].value:
+                    if i - 1 > -1:
+                        self.grid[i - 1][rowIndex].flag()
                     self.rowNums[rowIndex][k].crossout()
                     k -= 1
             if self.grid[i][rowIndex].state == STATES["FLAGGED"]:
@@ -232,8 +234,9 @@ class Game(boards.SingleBoard):
                 break
             if self.grid[colIndex][j].state == STATES["MINED"]:
                 total += 1
-                if j + 1 < HEIGHT and total == self.colNums[colIndex][k].value:
-                    self.grid[colIndex][j + 1].flag()
+                if total == self.colNums[colIndex][k].value:
+                    if j + 1 < HEIGHT:
+                        self.grid[colIndex][j + 1].flag()
                     self.colNums[colIndex][k].crossout()
                     k += 1
             if self.grid[colIndex][j].state == STATES["FLAGGED"]:
@@ -246,12 +249,29 @@ class Game(boards.SingleBoard):
                 break
             if self.grid[colIndex][j].state == STATES["MINED"]:
                 total += 1
-                if j - 1 < HEIGHT and total == self.colNums[colIndex][k].value:
-                    self.grid[colIndex][j - 1].flag()
+                if total == self.colNums[colIndex][k].value:
+                    if j - 1 < HEIGHT:
+                        self.grid[colIndex][j - 1].flag()
                     self.colNums[colIndex][k].crossout()
                     k -= 1
             if self.grid[colIndex][j].state == STATES["FLAGGED"]:
                 total = 0
+                
+        crossout_row: bool = True
+        crossout_col: bool = True
+        for i in range(WIDTH):
+            if self.grid[i][rowIndex].mineable and not self.grid[i][rowIndex].state == STATES["MINED"]:
+                crossout_row = False
+        for j in range(HEIGHT):
+            if self.grid[colIndex][j].mineable and not self.grid[colIndex][j].state == STATES["MINED"]:
+                crossout_col = False
+        if crossout_row:
+            for i in range(WIDTH):
+                self.grid[i][rowIndex].flag()
+        if crossout_col:
+            for j in range(HEIGHT):
+                self.grid[colIndex][j].flag()
+        
                 
         
             
