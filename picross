@@ -5,7 +5,7 @@ import random
 
 BOX_SIZE: int = 30
 WIDTH: int = 15
-HEIGHT: int = 10
+HEIGHT: int = 15
 MARGIN_X = WIDTH // 2 * BOX_SIZE
 MARGIN_Y = HEIGHT // 2 * BOX_SIZE
 FILL_PERCENT: float = 0.6
@@ -23,7 +23,8 @@ COLORS = {
     "WIN" : color.YELLOW,
     "LOSE" : color.RED,
     "GRID" : color.BLACK,
-    "HEALTH" : color.RED
+    "HEALTH" : color.RED,
+    "PROGRESS" : color.GREEN
 }
 STATES = {
     "UNKNOWN" : 0,
@@ -98,6 +99,7 @@ class Tile(boards.GameCell):
         self.mark.set_text("X")
         self.set_color(COLORS["FLAGGED"])
         self.board.handleCrossouts(self.j, self.i)
+        self.board.progress += 1
         self.board.updateBoard()
         return
     
@@ -121,7 +123,6 @@ class Number():
 class Game(boards.SingleBoard):
     
     def __init__(self):
-        self.mineableTiles: int = 0
         self.health: int = MAX_MISTAKES
         self.lines: list[games.Line] = []
         self.init_singleboard((MARGIN_X, MARGIN_Y), WIDTH, HEIGHT, BOX_SIZE)
@@ -132,8 +133,8 @@ class Game(boards.SingleBoard):
         self.handleAllNums()
         self.previous_mouse_positions: set[tuple[int, int]] = set[tuple[int, int]]()
         self.progress: int = 0
-        x1, y1 = self.cell_to_coords(WIDTH - 1, HEIGHT + 1)
-        x2, y2 = self.cell_to_coords(0, HEIGHT + 1)
+        x1, y1 = self.cell_to_coords(WIDTH - 1, HEIGHT + 2)
+        x2, y2 = self.cell_to_coords(0, HEIGHT + 2)
         x = (x1 + x2) / 2
         y = (y1 + y2) / 2
         self.game_over_text = games.Text(self, x + BOX_SIZE / 2, y + BOX_SIZE / 2, "", BOX_SIZE, COLORS["WIN"])
@@ -142,12 +143,15 @@ class Game(boards.SingleBoard):
         x = (x1 + x2) / 2
         y = (y1 + y2) / 2
         self.hp_text = games.Text(self, x + BOX_SIZE / 2, y + BOX_SIZE / 2, " ".join([HEALTH_ICON] * self.health), BOX_SIZE, COLORS["HEALTH"])
+        x1, y1 = self.cell_to_coords(WIDTH - 1, HEIGHT + 1)
+        x2, y2 = self.cell_to_coords(0, HEIGHT + 1)
+        x = (x1 + x2) / 2
+        y = (y1 + y2) / 2
+        self.progress_text = games.Text(self, x + BOX_SIZE / 2, y + BOX_SIZE / 2, "Progress: 0%", BOX_SIZE, COLORS["PROGRESS"])
         self.createLargeOutlines()
         
     def new_gamecell(self, i: int, j: int) -> Tile:
         mineable: bool = random.random() <= FILL_PERCENT
-        if mineable:
-            self.mineableTiles += 1
         return Tile(self, i, j, mineable)
     
     def tick(self):
@@ -216,13 +220,14 @@ class Game(boards.SingleBoard):
                 
     def updateBoard(self):
         self.hp_text.set_text(" ".join([HEALTH_ICON] * self.health))
+        self.progress_text.set_text(f"Progress: {100 * self.progress // (WIDTH * HEIGHT)}%")
         if self.health == 0:
             self.game_over_text.set_color(COLORS["LOSE"])
             self.game_over_text.set_text("YOU LOST!")
             for i in range(WIDTH):
                 for j in range(HEIGHT):
                     self.grid[i][j].changeable = False
-        elif self.progress == self.mineableTiles:
+        elif self.progress == WIDTH * HEIGHT:
             self.game_over_text.set_text("YOU WIN!")
     
     
