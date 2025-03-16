@@ -5,11 +5,12 @@ import random
 
 BOX_SIZE: int = 30
 WIDTH: int = 15
-HEIGHT: int = 15
+HEIGHT: int = 10
 MARGIN_X = WIDTH // 2 * BOX_SIZE
 MARGIN_Y = HEIGHT // 2 * BOX_SIZE
 FILL_PERCENT: float = 0.6
 MAX_MISTAKES: int = 3
+LARGE_OUTLINE_THICKNESS: int = 2
 COLORS = {
     "UNKNOWN" : color.WHITE,
     "MINED" : color.BLUE,
@@ -19,7 +20,8 @@ COLORS = {
     "NUMS" : color.WHITE,
     "CROSSOUT" : color.GRAY,
     "WIN" : color.YELLOW,
-    "LOSE" : color.RED
+    "LOSE" : color.RED,
+    "GRID" : color.BLACK
 }
 STATES = {
     "UNKNOWN" : 0,
@@ -38,7 +40,7 @@ class Tile(boards.GameCell):
         self.init_gamecell(board, i, j)
         self.set_color(COLORS["UNKNOWN"])
         x, y = self.board.cell_to_coords(self.i, self.j)
-        self.mark = games.Text(self.board, x + BOX_SIZE / 2, y + BOX_SIZE / 2, "", BOX_SIZE, COLORS["FLAG"])
+        self.mark = games.Text(self.board, x + BOX_SIZE / 2, y + BOX_SIZE / 2, "", BOX_SIZE, COLORS["FLAG"], None, 1)
         
         
     def handleMistake(self) -> None:
@@ -50,7 +52,7 @@ class Tile(boards.GameCell):
         self.mark.set_color(COLORS["MISTAKE"])
         self.mark.set_text("X")
         self.changeable = False
-        self.board.checkLoseCondition()
+        self.board.updateBoard()
         return
     
     
@@ -74,7 +76,7 @@ class Tile(boards.GameCell):
         self.set_color(COLORS["MINED"])
         self.board.handleCrossouts(self.j, self.i)
         self.board.progress += 1
-        self.board.checkWinCondition()
+        self.board.updateBoard()
         return
         
     
@@ -94,6 +96,7 @@ class Tile(boards.GameCell):
         self.mark.set_text("X")
         self.set_color(COLORS["FLAGGED"])
         self.board.handleCrossouts(self.j, self.i)
+        self.board.updateBoard()
         return
     
     
@@ -118,6 +121,7 @@ class Game(boards.SingleBoard):
     def __init__(self):
         self.mineableTiles: int = 0
         self.health: int = MAX_MISTAKES
+        self.lines: list[games.Line] = []
         self.init_singleboard((MARGIN_X, MARGIN_Y), WIDTH, HEIGHT, BOX_SIZE)
         self.draw_all_outlines()
         self.grid: list[list[Tile]]
@@ -131,6 +135,7 @@ class Game(boards.SingleBoard):
         x = (x1 + x2) / 2
         y = (y1 + y2) / 2
         self.game_over_text = games.Text(self, x + BOX_SIZE / 2, y + BOX_SIZE / 2, "", BOX_SIZE, COLORS["WIN"])
+        self.createLargeOutlines()
         
     def new_gamecell(self, i: int, j: int) -> Tile:
         mineable: bool = random.random() <= FILL_PERCENT
@@ -167,6 +172,16 @@ class Game(boards.SingleBoard):
             return
         return
     
+    def createLargeOutlines(self) -> None:
+        for i in range(5, WIDTH, 5):
+            x1, y1 = self.cell_to_coords(i, 0)
+            x2, y2 = self.cell_to_coords(i, HEIGHT)
+            self.lines.append(games.Line(self, 0, 0, [(x1, y1), (x2, y2)], COLORS["GRID"], 0, LARGE_OUTLINE_THICKNESS))
+        for j in range(5, HEIGHT, 5):
+            x1, y1 = self.cell_to_coords(0, j)
+            x2, y2 = self.cell_to_coords(WIDTH, j)
+            self.lines.append(games.Line(self, 0, 0, [(x1, y1), (x2, y2)], COLORS["GRID"], 0, LARGE_OUTLINE_THICKNESS))
+    
     
     def handleAllNums(self) -> None:
         for j in range(HEIGHT):
@@ -192,17 +207,15 @@ class Game(boards.SingleBoard):
         
                 
                 
-    def checkWinCondition(self):
-        if self.progress == self.mineableTiles:
-            self.game_over_text.set_text("YOU WIN!")
-            
-    def checkLoseCondition(self):
+    def updateBoard(self):
         if self.health == 0:
             self.game_over_text.set_color(COLORS["LOSE"])
             self.game_over_text.set_text("YOU LOST!")
             for i in range(WIDTH):
                 for j in range(HEIGHT):
                     self.grid[i][j].changeable = False
+        elif self.progress == self.mineableTiles:
+            self.game_over_text.set_text("YOU WIN!")
     
     
     def getRowNums(self, rowIndex: int) -> list[int]:
