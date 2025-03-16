@@ -24,7 +24,8 @@ COLORS = {
     "LOSE" : color.RED,
     "GRID" : color.BLACK,
     "HEALTH" : color.RED,
-    "PROGRESS" : color.GREEN
+    "PROGRESS" : color.GREEN,
+    "SPECIAL" : color.YELLOW
 }
 STATES = {
     "UNKNOWN" : 0,
@@ -201,6 +202,8 @@ class Game(boards.SingleBoard):
             n = len(rowNums)
             for i in range(n):
                 self.rowNums[-1].append(Number(self, i - n, j, rowNums[i]))
+                if rowNums[i] > WIDTH // 2:
+                    self.rowNums[-1][-1].text.set_color(COLORS["SPECIAL"])
                 
         for i in range(WIDTH):
             self.colNums.append([])
@@ -208,6 +211,8 @@ class Game(boards.SingleBoard):
             m = len(colNums)
             for j in range(m):
                 self.colNums[-1].append(Number(self, i, j - m, colNums[j]))
+                if colNums[j] > HEIGHT // 2:
+                    self.colNums[-1][-1].text.set_color(COLORS["SPECIAL"])
                 
         for j in range(HEIGHT):
             if self.rowNums[j][0].value == 0:
