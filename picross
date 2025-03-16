@@ -11,6 +11,7 @@ MARGIN_Y = HEIGHT // 2 * BOX_SIZE
 FILL_PERCENT: float = 0.6
 MAX_MISTAKES: int = 3
 LARGE_OUTLINE_THICKNESS: int = 2
+HEALTH_ICON: str = "X"
 COLORS = {
     "UNKNOWN" : color.WHITE,
     "MINED" : color.BLUE,
@@ -21,7 +22,8 @@ COLORS = {
     "CROSSOUT" : color.GRAY,
     "WIN" : color.YELLOW,
     "LOSE" : color.RED,
-    "GRID" : color.BLACK
+    "GRID" : color.BLACK,
+    "HEALTH" : color.RED
 }
 STATES = {
     "UNKNOWN" : 0,
@@ -135,6 +137,11 @@ class Game(boards.SingleBoard):
         x = (x1 + x2) / 2
         y = (y1 + y2) / 2
         self.game_over_text = games.Text(self, x + BOX_SIZE / 2, y + BOX_SIZE / 2, "", BOX_SIZE, COLORS["WIN"])
+        x1, y1 = self.cell_to_coords(WIDTH - 1, HEIGHT)
+        x2, y2 = self.cell_to_coords(0, HEIGHT)
+        x = (x1 + x2) / 2
+        y = (y1 + y2) / 2
+        self.hp_text = games.Text(self, x + BOX_SIZE / 2, y + BOX_SIZE / 2, " ".join([HEALTH_ICON] * self.health), BOX_SIZE, COLORS["HEALTH"])
         self.createLargeOutlines()
         
     def new_gamecell(self, i: int, j: int) -> Tile:
@@ -208,6 +215,7 @@ class Game(boards.SingleBoard):
                 
                 
     def updateBoard(self):
+        self.hp_text.set_text(" ".join([HEALTH_ICON] * self.health))
         if self.health == 0:
             self.game_over_text.set_color(COLORS["LOSE"])
             self.game_over_text.set_text("YOU LOST!")
