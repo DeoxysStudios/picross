@@ -198,7 +198,7 @@ class Game(boards.SingleBoard):
     def handleAllNums(self) -> None:
         for j in range(HEIGHT):
             self.rowNums.append([])
-            rowNums = self.getRowNums(j)
+            rowNums = Game.getTileNums(self.getRow(j))
             n = len(rowNums)
             for i in range(n):
                 self.rowNums[-1].append(Number(self, i - n, j, rowNums[i]))
@@ -207,7 +207,7 @@ class Game(boards.SingleBoard):
                 
         for i in range(WIDTH):
             self.colNums.append([])
-            colNums = self.getColNums(i)
+            colNums = Game.getTileNums(self.getCol(i))
             m = len(colNums)
             for j in range(m):
                 self.colNums[-1].append(Number(self, i, j - m, colNums[j]))
@@ -234,6 +234,10 @@ class Game(boards.SingleBoard):
                     self.grid[i][j].changeable = False
         elif self.progress == WIDTH * HEIGHT:
             self.game_over_text.set_text("YOU WIN!")
+            
+    @staticmethod        
+    def hasSolvableTiles(tiles: list[Tile]) -> bool:
+        pass
             
             
     @staticmethod
@@ -288,11 +292,12 @@ class Game(boards.SingleBoard):
         return Game.tilesAreValid(tile_states[1:], nums)
     
     
-    def getRowNums(self, rowIndex: int) -> list[int]:
+    @staticmethod
+    def getTileNums(tiles: list[Tile]) -> list[int]:
         outnums: list[int] = []
         total: int = 0
-        for i in range(WIDTH):
-            if self.grid[i][rowIndex].mineable:
+        for tile in tiles:
+            if tile.mineable:
                 total += 1
             elif total > 0:
                 outnums.append(total)
@@ -301,19 +306,21 @@ class Game(boards.SingleBoard):
             outnums.append(total)
         return outnums
     
-    
-    def getColNums(self, colIndex: int) -> list[int]:
+    @staticmethod
+    def getTileStates(tiles: list[Tile]) -> list[int]:
         outnums: list[int] = []
-        total: int = 0
-        for j in range(HEIGHT):
-            if self.grid[colIndex][j].mineable:
-                total += 1
-            elif total > 0:
-                outnums.append(total)
-                total = 0
-        if total > 0 or len(outnums) == 0:
-            outnums.append(total)
+        for tile in tiles:
+            outnums.append(tile.state)
         return outnums
+    
+    def getRow(self, rowIndex: int) -> list[Tile]:
+        outRow: list[Tile] = []
+        for col in self.grid:
+            outRow.append(col[rowIndex])
+        return outRow
+    
+    def getCol(self, colIndex: int) -> list[Tile]:
+        return self.grid[colIndex]
     
     
     def handleCrossouts(self, rowIndex: int, colIndex: int) -> None:
