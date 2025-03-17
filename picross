@@ -234,6 +234,58 @@ class Game(boards.SingleBoard):
                     self.grid[i][j].changeable = False
         elif self.progress == WIDTH * HEIGHT:
             self.game_over_text.set_text("YOU WIN!")
+            
+            
+    @staticmethod
+    def tilesAreValid(tile_states: list[int], nums: list[int]) -> bool:
+        if nums in [[], [0]]:
+            return not STATES["MINED"] in tile_states
+        
+        if not STATES["UNKNOWN"] in tile_states:
+            if not STATES["MINED"] in tile_states:
+                return nums in [[], [0]]
+            temp1 = tile_states.index(STATES["MINED"])
+            if STATES["FLAGGED"] in tile_states[temp1:]:
+                temp2 = tile_states.index(STATES["FLAGGED"], temp1)
+            else:
+                temp2 = len(tile_states)
+            if temp2 - temp1 != nums[0]:
+                return False
+            return Game.tilesAreValid(tile_states[temp2:], nums[1:])
+        
+        if not STATES["MINED"] in tile_states:
+            temp1 = tile_states.index(STATES["UNKNOWN"])
+            if STATES["FLAGGED"] in tile_states[temp1:]:
+                temp2 = tile_states.index(STATES["FLAGGED"], temp1)
+            else:
+                temp2 = len(tile_states)
+            if temp2 >= temp1 + nums[0]:
+                return Game.tilesAreValid(tile_states[temp1 + nums[0] + 1:], nums[1:])
+            return Game.tilesAreValid(tile_states[temp2 + 1:], nums)
+            
+        if tile_states[0] == STATES["FLAGGED"]:
+            return Game.tilesAreValid(tile_states[1:], nums)
+        if tile_states[0] == STATES["MINED"]:
+            if len(tile_states) > nums[0] and tile_states[nums[0]] == STATES["MINED"]:
+                return False
+            if STATES["FLAGGED"] in tile_states:
+                temp = tile_states.index(STATES["FLAGGED"])
+            else:
+                temp = len(tile_states)
+            if temp < nums[0]:
+                return False
+            return Game.tilesAreValid(tile_states[nums[0] + 1:], nums[1:])
+        if len(tile_states) > nums[0] and tile_states[nums[0]] == STATES["MINED"]:
+            return Game.tilesAreValid(tile_states[1:], nums)
+        if STATES["FLAGGED"] in tile_states:
+            temp = tile_states.index(STATES["FLAGGED"])
+        else:
+            temp = len(tile_states)
+        if temp < nums[0]:
+            return Game.tilesAreValid(tile_states[temp + 1:], nums)
+        if Game.tilesAreValid(tile_states[nums[0] + 1:], nums[1:]):
+            return True
+        return Game.tilesAreValid(tile_states[1:], nums)
     
     
     def getRowNums(self, rowIndex: int) -> list[int]:
