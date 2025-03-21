@@ -2,10 +2,13 @@ from gasp import games # type: ignore
 from gasp import boards # type: ignore
 from gasp import color # type: ignore
 import random
+import argparse
 
-BOX_SIZE: int = 30
-WIDTH: int = 15
-HEIGHT: int = 15
+parser=argparse.ArgumentParser()
+WIDTH: int = 20
+HEIGHT: int = 20
+MAXSIZE: int = max(WIDTH, HEIGHT)
+BOX_SIZE: int = 800 // (2 * MAXSIZE + MAXSIZE % 2)
 MARGIN_X = (WIDTH + 1) // 2 * BOX_SIZE
 MARGIN_Y = (HEIGHT + 1) // 2 * BOX_SIZE
 FILL_PERCENT: float = 0.6
