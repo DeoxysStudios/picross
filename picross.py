@@ -6,8 +6,8 @@ import random
 BOX_SIZE: int = 30
 WIDTH: int = 15
 HEIGHT: int = 15
-MARGIN_X = WIDTH // 2 * BOX_SIZE
-MARGIN_Y = HEIGHT // 2 * BOX_SIZE
+MARGIN_X = (WIDTH + 1) // 2 * BOX_SIZE
+MARGIN_Y = (HEIGHT + 1) // 2 * BOX_SIZE
 FILL_PERCENT: float = 0.6
 MAX_MISTAKES: int = 3
 LARGE_OUTLINE_THICKNESS: int = 2
@@ -398,16 +398,6 @@ class Game(boards.SingleBoard):
         if crossout_col:
             for j in range(HEIGHT):
                 self.grid[colIndex][j].flag()
-        
-                
-        
-            
-                
-            
-            
-            
-        
-        
 
 
 
