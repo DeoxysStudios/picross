@@ -5,13 +5,21 @@ import random
 import argparse
 
 parser=argparse.ArgumentParser()
-WIDTH: int = 20
-HEIGHT: int = 20
-MAXSIZE: int = max(WIDTH, HEIGHT)
-BOX_SIZE: int = 800 // (2 * MAXSIZE + MAXSIZE % 2)
-MARGIN_X = (WIDTH + 1) // 2 * BOX_SIZE
-MARGIN_Y = (HEIGHT + 1) // 2 * BOX_SIZE
-FILL_PERCENT: float = 0.6
+parser.add_argument('width', default = 15, type = int, nargs = '?')
+parser.add_argument('height', default = 15, type = int, nargs = '?')
+parser.add_argument('difficulty', default = 0.6, type = float, nargs = '?')
+args = parser.parse_args()
+WIDTH: int = args.width
+HEIGHT: int = args.height
+PADDING_RIGHT: int = 3
+PADDING_BOTTOM: int = 3
+MAXSIZE: int = max(2 * WIDTH - WIDTH // 2 + PADDING_RIGHT, 2 * HEIGHT - HEIGHT // 2 + PADDING_BOTTOM)
+BOX_SIZE: int = 800 // MAXSIZE
+MARGIN_LEFT: int = (WIDTH + 1) // 2 * BOX_SIZE
+MARGIN_TOP: int = (HEIGHT + 1) // 2 * BOX_SIZE
+MARGIN_RIGHT: int = BOX_SIZE * PADDING_RIGHT
+MARGIN_BOTTOM: int = BOX_SIZE * PADDING_BOTTOM
+FILL_PERCENT: float = args.difficulty
 MAX_MISTAKES: int = 3
 LARGE_OUTLINE_THICKNESS: int = 2
 HEALTH_ICON: str = "X"
@@ -128,15 +136,14 @@ class Game(boards.SingleBoard):
     
     def __init__(self):
         self.health: int = MAX_MISTAKES
+        self.progress: int = 0
         self.lines: list[games.Line] = []
-        self.init_singleboard((MARGIN_X, MARGIN_Y), WIDTH, HEIGHT, BOX_SIZE)
+        self.init_singleboard((MARGIN_LEFT, MARGIN_TOP, MARGIN_RIGHT, MARGIN_BOTTOM), WIDTH, HEIGHT, BOX_SIZE)
         self.draw_all_outlines()
         self.grid: list[list[Tile]]
         self.rowNums: list[list[Number]] = []
         self.colNums: list[list[Number]] = []
-        self.handleAllNums()
         self.previous_mouse_positions: set[tuple[int, int]] = set[tuple[int, int]]()
-        self.progress: int = 0
         x1, y1 = self.cell_to_coords(WIDTH - 1, HEIGHT + 2)
         x2, y2 = self.cell_to_coords(0, HEIGHT + 2)
         x = (x1 + x2) / 2
@@ -153,6 +160,7 @@ class Game(boards.SingleBoard):
         y = (y1 + y2) / 2
         self.progress_text = games.Text(self, x + BOX_SIZE / 2, y + BOX_SIZE / 2, "Progress: 0%", BOX_SIZE, COLORS["PROGRESS"])
         self.createLargeOutlines()
+        self.handleAllNums()
         
     def new_gamecell(self, i: int, j: int) -> Tile:
         mineable: bool = random.random() <= FILL_PERCENT
