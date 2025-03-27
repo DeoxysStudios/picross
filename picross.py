@@ -124,6 +124,8 @@ class Number():
         self.i, self.j = i, j
         x, y = self.board.cell_to_coords(self.i, self.j)
         self.text = games.Text(self.board, x + BOX_SIZE / 2, y + BOX_SIZE / 2, str(value), BOX_SIZE, COLORS["NUMS"])
+        if (value == 0):
+            self.crossout()
         
     def crossout(self) -> None:
         self.text.set_color(COLORS["CROSSOUT"])
