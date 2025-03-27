@@ -205,7 +205,6 @@ class Game(boards.SingleBoard):
             x2, y2 = self.cell_to_coords(WIDTH, j)
             self.lines.append(games.Line(self, 0, 0, [(x1, y1), (x2, y2)], COLORS["GRID"], 0, LARGE_OUTLINE_THICKNESS))
     
-    
     def handleAllNums(self) -> None:
         for j in range(HEIGHT):
             self.rowNums.append([])
@@ -231,9 +230,7 @@ class Game(boards.SingleBoard):
         for i in range(WIDTH):
             if self.colNums[i][0].value == 0:
                 self.grid[i][0].flag()        
-        
-                
-                
+             
     def updateBoard(self):
         self.hp_text.set_text(" ".join([HEALTH_ICON] * self.health))
         self.progress_text.set_text(f"Progress: {100 * self.progress // (WIDTH * HEIGHT)}%")
@@ -249,7 +246,6 @@ class Game(boards.SingleBoard):
     @staticmethod        
     def hasSolvableTiles(tiles: list[Tile]) -> bool:
         pass
-            
             
     @staticmethod
     def tilesAreValid(tile_states: list[int], nums: list[int]) -> bool:
@@ -302,7 +298,6 @@ class Game(boards.SingleBoard):
             return True
         return Game.tilesAreValid(tile_states[1:], nums)
     
-    
     @staticmethod
     def getTileNums(tiles: list[Tile]) -> list[int]:
         outnums: list[int] = []
@@ -324,6 +319,23 @@ class Game(boards.SingleBoard):
             outnums.append(tile.state)
         return outnums
     
+    @staticmethod
+    def validateBoard(board: list[list[int]]) -> bool:
+        raise Exception("validateBoard is not implemented")
+    
+    @staticmethod
+    def generateBoard() -> list[list[int]]:
+        new_board: list[list[int]] = []
+        for i in range(WIDTH):
+            new_board.append([])
+            for j in range(HEIGHT):
+                new_board[-1].append(STATES["MINED"] if random.random() <= FILL_PERCENT else STATES["FLAGGED"])
+        while not Game.validateBoard(new_board):
+            for i in range(WIDTH):
+                for j in range(HEIGHT):
+                    new_board[i][j] = STATES["MINED"] if random.random() <= FILL_PERCENT else STATES["FLAGGED"]
+        return new_board
+    
     def getRow(self, rowIndex: int) -> list[Tile]:
         outRow: list[Tile] = []
         for col in self.grid:
@@ -332,7 +344,6 @@ class Game(boards.SingleBoard):
     
     def getCol(self, colIndex: int) -> list[Tile]:
         return self.grid[colIndex]
-    
     
     def handleCrossouts(self, rowIndex: int, colIndex: int) -> None:
         k: int = 0
