@@ -22,6 +22,8 @@ MARGIN_BOTTOM: int = BOX_SIZE * PADDING_BOTTOM
 FILL_PERCENT: float = args.difficulty
 MAX_MISTAKES: int = 3
 LARGE_OUTLINE_THICKNESS: int = 2
+MAX_GENERATE_ATTEMPTS: int = 16
+MAX_UNKNOWN_TOLERANCE: int = 16
 HEALTH_ICON: str = "X"
 COLORS = {
     "UNKNOWN" : color.WHITE,
@@ -399,15 +401,18 @@ class Game(boards.SingleBoard):
             return Game.solveBoard(rowNums, colNums, newBoard)
         
         # Manage hypotheticals
+        total: int = 0
         qx: int = -1
         qy: int = -1
-        for x in range(width):
-            if STATES["UNKNOWN"] in newBoard[x]:
-                qx = x
-                qy = newBoard[x].index(STATES["UNKNOWN"])
-                break
-        if (qx, qy) == (-1, -1):
+        for x in range(len(colNums)):
+            for y in range(len(rowNums)):
+                if board[x][y] == STATES["UNKNOWN"]:
+                    total += 1
+                    qx = x
+                    qy = y
+        if total > MAX_UNKNOWN_TOLERANCE or total == 0:
             return newBoard
+        
         hypoMined: list[list[int]] = list()
         hypoFlagged: list[list[int]] = list()
         for x in range(width):
@@ -438,15 +443,23 @@ class Game(boards.SingleBoard):
     
     @staticmethod
     def generateBoard() -> list[list[int]]:
+        attempts: int = 1
+        currFillPercent: float = FILL_PERCENT
         new_board: list[list[int]] = []
         for i in range(WIDTH):
             new_board.append([])
             for j in range(HEIGHT):
-                new_board[-1].append(STATES["MINED"] if random.random() <= FILL_PERCENT else STATES["FLAGGED"])
+                new_board[-1].append(STATES["MINED"] if random.random() <= currFillPercent else STATES["FLAGGED"])
         while not Game.validateBoard(Game.getListRowNums(new_board), Game.getListColNums(new_board)):
+            if attempts == MAX_GENERATE_ATTEMPTS:
+                print(f"Board generation is taking too long at fill percent {100.0 * currFillPercent}%")
+                currFillPercent = 1.0 - 0.9 * (1.0 - currFillPercent)
+                attempts = 0
+                print(f"Raising fill percent to {100.0 * currFillPercent}%")
+            attempts += 1
             for i in range(WIDTH):
                 for j in range(HEIGHT):
-                    new_board[i][j] = STATES["MINED"] if random.random() <= FILL_PERCENT else STATES["FLAGGED"]
+                    new_board[i][j] = STATES["MINED"] if random.random() <= currFillPercent else STATES["FLAGGED"]
         return new_board
     
     @staticmethod
