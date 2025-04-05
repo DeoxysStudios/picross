@@ -246,7 +246,7 @@ class Game(boards.SingleBoard):
             self.game_over_text.set_text("YOU WIN!")
             
     @staticmethod        
-    def fillRow(row: list[int], nums: list[int]) -> list[int]:
+    def solveRow(row: list[int], nums: list[int]) -> list[int]:
         if not Game.tilesAreValid(row, nums):
             raise Exception("Invalid nums for this row")
         
@@ -254,23 +254,23 @@ class Game(boards.SingleBoard):
             return [STATES["FLAGGED"]] * len(row)
         
         if row[0] == STATES["FLAGGED"]:
-            return [STATES["FLAGGED"]] + Game.fillRow(row[1:], nums)
+            return [STATES["FLAGGED"]] + Game.solveRow(row[1:], nums)
         
         if len(row) == nums[0]:
             return [STATES["MINED"]] * nums[0]
         
         if row[0] == STATES["MINED"]:
-            return [STATES["MINED"]] * nums[0] + [STATES["FLAGGED"]] + Game.fillRow(row[nums[0] + 1:], nums[1:])
+            return [STATES["MINED"]] * nums[0] + [STATES["FLAGGED"]] + Game.solveRow(row[nums[0] + 1:], nums[1:])
         
         if not Game.tilesAreValid([STATES["FLAGGED"]] + row[1:], nums):
-            return [STATES["MINED"]] * nums[0] + [STATES["FLAGGED"]] + Game.fillRow(row[nums[0] + 1:], nums[1:])
+            return [STATES["MINED"]] * nums[0] + [STATES["FLAGGED"]] + Game.solveRow(row[nums[0] + 1:], nums[1:])
         
         if not Game.tilesAreValid([STATES["MINED"]] + row[1:], nums):
-            return [STATES["FLAGGED"]] + Game.fillRow(row[1:], nums)
+            return [STATES["FLAGGED"]] + Game.solveRow(row[1:], nums)
         
         outrow: list[int] = list()
-        blockstr = Game.fillRow([STATES["FLAGGED"]] + row[1:], nums)
-        fillstr = Game.fillRow([STATES["MINED"]] + row[1:], nums)
+        blockstr = Game.solveRow([STATES["FLAGGED"]] + row[1:], nums)
+        fillstr = Game.solveRow([STATES["MINED"]] + row[1:], nums)
         for i in range(len(row)):
             if fillstr[i] == blockstr[i]:
                 outrow.append(fillstr[i])
@@ -351,24 +351,75 @@ class Game(boards.SingleBoard):
         return outnums
     
     @staticmethod
-    def solveBoard(board: list[list[int]], rowNums: list[list[int]], colNums: list[list[int]]) -> list[list[int]]:
+    def solveBoard(rowNums: list[list[int]], colNums: list[list[int]], board: list[list[int]] | None = None) -> list[list[int]]:
         newBoard: list[list[int]] = list()
         width = len(colNums)
         height = len(rowNums)
+        originalBoard: list[list[int]]
+        if board == None:
+            originalBoard = list()
+            for x in range(width):
+                originalBoard.append(list())
+                for y in range(height):
+                    originalBoard[x].append(STATES["UNKNOWN"])
+        else:
+            originalBoard = board
         
         # Solve Columns
-        for i in range(width):
-            newBoard.append(Game.fillRow(board[i], colNums[i]))
+        for x in range(width):
+            newBoard.append(Game.solveRow(originalBoard[x], colNums[x]))
             
+        # Solve Rows
+        for y in range(height):
+            currRow: list[int] = list()
+            for x in range(width):
+                currRow.append(newBoard[x][y])
+            newRow = Game.solveRow(currRow, rowNums[y])
+            for x in range(width):
+                newBoard[x][y] = newRow[x]
+        
+        # Repeat until more info needed
+        if newBoard != originalBoard:
+            return Game.solveBoard(rowNums, colNums, newBoard)
+        
+        # Manage hypotheticals
+        qx: int = -1
+        qy: int = -1
+        for x in range(width):
+            if STATES["UNKNOWN"] in newBoard[x]:
+                qx = x
+                qy = newBoard[x].index(STATES["UNKNOWN"])
+                break
+        if (qx, qy) == (-1, -1):
+            return newBoard
+        hypoMined: list[list[int]] = list()
+        hypoFlagged: list[list[int]] = list()
+        for x in range(width):
+            hypoMined.append(list())
+            hypoFlagged.append(list())
+            for y in range(height):
+                if (x, y) == (qx, qy):
+                    hypoMined[x].append(STATES["MINED"])
+                    hypoFlagged[x].append(STATES["FLAGGED"])
+                else:
+                    hypoMined[x].append(newBoard[x][y])
+                    hypoFlagged[x].append(newBoard[x][y])
+        if not Game.validateBoard(rowNums, colNums, hypoMined):
+            return Game.solveBoard(rowNums, colNums, hypoFlagged)
+        if not Game.validateBoard(rowNums, colNums, hypoFlagged):
+            return Game.solveBoard(rowNums, colNums, hypoMined)
         return newBoard
             
         
     
     @staticmethod
-    def validateBoard(board: list[list[int]]) -> bool:
-        for col in Game.solveBoard(board):
-            if STATES["UNKNOWN"] in col:
-                return False
+    def validateBoard(rowNums: list[list[int]], colNums: list[list[int]], board: list[list[int]] | None = None) -> bool:
+        try:
+            for col in Game.solveBoard(rowNums, colNums, board):
+                if STATES["UNKNOWN"] in col:
+                    return False
+        except:
+            return False
         return True
     
     @staticmethod
