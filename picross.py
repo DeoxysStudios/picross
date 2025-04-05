@@ -246,8 +246,37 @@ class Game(boards.SingleBoard):
             self.game_over_text.set_text("YOU WIN!")
             
     @staticmethod        
-    def hasSolvableTiles(tiles: list[Tile]) -> bool:
-        pass
+    def fillRow(row: list[int], nums: list[int]) -> list[int]:
+        if not Game.tilesAreValid(row, nums):
+            raise Exception("Invalid nums for this row")
+        
+        if nums in [[], [0]]:
+            return [STATES["FLAGGED"]] * len(row)
+        
+        if row[0] == STATES["FLAGGED"]:
+            return [STATES["FLAGGED"]] + Game.fillRow(row[1:], nums)
+        
+        if len(row) == nums[0]:
+            return [STATES["MINED"]] * nums[0]
+        
+        if row[0] == STATES["MINED"]:
+            return [STATES["MINED"]] * nums[0] + [STATES["FLAGGED"]] + Game.fillRow(row[nums[0] + 1:], nums[1:])
+        
+        if not Game.tilesAreValid([STATES["FLAGGED"]] + row[1:], nums):
+            return [STATES["MINED"]] * nums[0] + [STATES["FLAGGED"]] + Game.fillRow(row[nums[0] + 1:], nums[1:])
+        
+        if not Game.tilesAreValid([STATES["MINED"]] + row[1:], nums):
+            return [STATES["FLAGGED"]] + Game.fillRow(row[1:], nums)
+        
+        outrow: list[int] = list()
+        blockstr = Game.fillRow([STATES["FLAGGED"]] + row[1:], nums)
+        fillstr = Game.fillRow([STATES["MINED"]] + row[1:], nums)
+        for i in range(len(row)):
+            if fillstr[i] == blockstr[i]:
+                outrow.append(fillstr[i])
+            else:
+                outrow.append(STATES["UNKNOWN"])
+        return outrow
             
     @staticmethod
     def tilesAreValid(tile_states: list[int], nums: list[int]) -> bool:
@@ -323,6 +352,7 @@ class Game(boards.SingleBoard):
     
     @staticmethod
     def validateBoard(board: list[list[int]]) -> bool:
+        # TODO: Implement validateBoard
         raise Exception("validateBoard is not implemented")
     
     @staticmethod
