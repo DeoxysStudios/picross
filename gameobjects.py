@@ -351,6 +351,11 @@ class Game(boards.SingleBoard):
         return outnums
     
     @staticmethod
+    def solveBoard(board: list[list[int]], rowNums: list[list[int]], colNums: list[list[int]]) -> list[list[int]]:
+        # TODO: Implement solveBoard
+        raise Exception("solveBoard is not implemented")
+    
+    @staticmethod
     def validateBoard(board: list[list[int]]) -> bool:
         # TODO: Implement validateBoard
         raise Exception("validateBoard is not implemented")
