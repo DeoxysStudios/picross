@@ -22,8 +22,9 @@ MARGIN_BOTTOM: int = BOX_SIZE * PADDING_BOTTOM
 FILL_PERCENT: float = args.difficulty
 MAX_MISTAKES: int = 3
 LARGE_OUTLINE_THICKNESS: int = 2
-MAX_GENERATE_ATTEMPTS: int = 16
-MAX_UNKNOWN_TOLERANCE: int = 16
+MAX_GENERATE_ATTEMPTS: int = 64
+MAX_UNKNOWN_TOLERANCE: int = 8
+DIFFICULTY_INCREMENT: float = 0.01
 HEALTH_ICON: str = "X"
 COLORS = {
     "UNKNOWN" : color.WHITE,
@@ -139,6 +140,7 @@ class Number():
 class Game(boards.SingleBoard):
     
     def __init__(self):
+        self.validBoard = Game.generateBoard()
         self.health: int = MAX_MISTAKES
         self.progress: int = 0
         self.lines: list[games.Line] = []
@@ -167,7 +169,7 @@ class Game(boards.SingleBoard):
         self.handleAllNums()
         
     def new_gamecell(self, i: int, j: int) -> Tile:
-        mineable: bool = random.random() <= FILL_PERCENT
+        mineable: bool = (self.validBoard[i][j] == STATES["MINED"])
         return Tile(self, i, j, mineable)
     
     def tick(self):
@@ -453,7 +455,7 @@ class Game(boards.SingleBoard):
         while not Game.validateBoard(Game.getListRowNums(new_board), Game.getListColNums(new_board)):
             if attempts == MAX_GENERATE_ATTEMPTS:
                 print(f"Board generation is taking too long at fill percent {100.0 * currFillPercent}%")
-                currFillPercent = 1.0 - 0.9 * (1.0 - currFillPercent)
+                currFillPercent = 1.0 - (1.0 - DIFFICULTY_INCREMENT) * (1.0 - currFillPercent)
                 attempts = 0
                 print(f"Raising fill percent to {100.0 * currFillPercent}%")
             attempts += 1
