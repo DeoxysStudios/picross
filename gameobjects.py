@@ -344,6 +344,22 @@ class Game(boards.SingleBoard):
         return outnums
     
     @staticmethod
+    def getListNums(tiles: list[int]) -> list[int]:
+        if STATES["UNKNOWN"] in tiles:
+            raise Exception("Can't get list nums for a list with unknown tiles")
+        outnums: list[int] = []
+        total: int = 0
+        for tile in tiles:
+            if tile == STATES["MINED"]:
+                total += 1
+            elif total > 0:
+                outnums.append(total)
+                total = 0
+        if total > 0 or len(outnums) == 0:
+            outnums.append(total)
+        return outnums
+    
+    @staticmethod
     def getTileStates(tiles: list[Tile]) -> list[int]:
         outnums: list[int] = []
         for tile in tiles:
@@ -409,8 +425,6 @@ class Game(boards.SingleBoard):
         if not Game.validateBoard(rowNums, colNums, hypoFlagged):
             return Game.solveBoard(rowNums, colNums, hypoMined)
         return newBoard
-            
-        
     
     @staticmethod
     def validateBoard(rowNums: list[list[int]], colNums: list[list[int]], board: list[list[int]] | None = None) -> bool:
@@ -429,11 +443,36 @@ class Game(boards.SingleBoard):
             new_board.append([])
             for j in range(HEIGHT):
                 new_board[-1].append(STATES["MINED"] if random.random() <= FILL_PERCENT else STATES["FLAGGED"])
-        while not Game.validateBoard(new_board):
+        while not Game.validateBoard(Game.getListRowNums(new_board), Game.getListColNums(new_board)):
             for i in range(WIDTH):
                 for j in range(HEIGHT):
                     new_board[i][j] = STATES["MINED"] if random.random() <= FILL_PERCENT else STATES["FLAGGED"]
         return new_board
+    
+    @staticmethod
+    def getListCol(board: list[list[int]], colIndex: int) -> list[int]:
+        return board[colIndex]
+    
+    @staticmethod
+    def getListRow(board: list[list[int]], rowIndex: int) -> list[int]:
+        outRow: list[int] = list()
+        for col in board:
+            outRow.append(col[rowIndex])
+        return outRow
+    
+    @staticmethod
+    def getListRowNums(board: list[list[int]]) -> list[list[int]]:
+        outList: list[list[int]] = list()
+        for y in range(len(board[0])):
+            outList.append(Game.getListNums(Game.getListRow(board, y)))
+        return outList
+    
+    @staticmethod
+    def getListColNums(board: list[list[int]]) -> list[list[int]]:
+        outList: list[list[int]] = list()
+        for x in range(len(board)):
+            outList.append(Game.getListNums(Game.getListCol(board, x)))
+        return outList
     
     def getRow(self, rowIndex: int) -> list[Tile]:
         outRow: list[Tile] = []
