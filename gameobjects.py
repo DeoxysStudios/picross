@@ -357,8 +357,10 @@ class Game(boards.SingleBoard):
     
     @staticmethod
     def validateBoard(board: list[list[int]]) -> bool:
-        # TODO: Implement validateBoard
-        raise Exception("validateBoard is not implemented")
+        for col in Game.solveBoard(board):
+            if STATES["UNKNOWN"] in col:
+                return False
+        return True
     
     @staticmethod
     def generateBoard() -> list[list[int]]:
