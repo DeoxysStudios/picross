@@ -352,8 +352,17 @@ class Game(boards.SingleBoard):
     
     @staticmethod
     def solveBoard(board: list[list[int]], rowNums: list[list[int]], colNums: list[list[int]]) -> list[list[int]]:
-        # TODO: Implement solveBoard
-        raise Exception("solveBoard is not implemented")
+        newBoard: list[list[int]] = list()
+        width = len(colNums)
+        height = len(rowNums)
+        
+        # Solve Columns
+        for i in range(width):
+            newBoard.append(Game.fillRow(board[i], colNums[i]))
+            
+        return newBoard
+            
+        
     
     @staticmethod
     def validateBoard(board: list[list[int]]) -> bool:
