@@ -46,6 +46,11 @@ STATES = {
     "MINED" : 1,
     "FLAGGED" : -1
 }
+VISUALS: dict[int, str] = {
+    STATES["UNKNOWN"]: "?",
+    STATES["FLAGGED"]: "X",
+    STATES["MINED"]: "O"
+}
 
 class Tile(boards.GameCell):
     
@@ -427,14 +432,30 @@ class Game(boards.SingleBoard):
                 else:
                     hypoMined[x].append(newBoard[x][y])
                     hypoFlagged[x].append(newBoard[x][y])
-        if not Game.validateBoard(rowNums, colNums, hypoMined):
+        if not Game.boardIsValid(rowNums, colNums, hypoMined):
             return Game.solveBoard(rowNums, colNums, hypoFlagged)
-        if not Game.validateBoard(rowNums, colNums, hypoFlagged):
+        if not Game.boardIsValid(rowNums, colNums, hypoFlagged):
             return Game.solveBoard(rowNums, colNums, hypoMined)
         return newBoard
     
     @staticmethod
-    def validateBoard(rowNums: list[list[int]], colNums: list[list[int]], board: list[list[int]] | None = None) -> bool:
+    def printBoard(board: list[list[int]]):
+        for y in range(len(board[0])):
+            for x in range(len(board)):
+                print(VISUALS[board[x][y]], end = "")
+            print("")
+        return
+    
+    @staticmethod
+    def boardIsValid(rowNums: list[list[int]], colNums: list[list[int]], board: list[list[int]] | None = None) -> bool:
+        try:
+            Game.solveBoard(rowNums, colNums, board)
+            return True
+        except:
+            return False
+    
+    @staticmethod
+    def boardIsSolvable(rowNums: list[list[int]], colNums: list[list[int]], board: list[list[int]] | None = None) -> bool:
         try:
             for col in Game.solveBoard(rowNums, colNums, board):
                 if STATES["UNKNOWN"] in col:
@@ -452,7 +473,7 @@ class Game(boards.SingleBoard):
             new_board.append([])
             for j in range(HEIGHT):
                 new_board[-1].append(STATES["MINED"] if random.random() <= currFillPercent else STATES["FLAGGED"])
-        while not Game.validateBoard(Game.getListRowNums(new_board), Game.getListColNums(new_board)):
+        while not Game.boardIsSolvable(Game.getListRowNums(new_board), Game.getListColNums(new_board)):
             if attempts == MAX_GENERATE_ATTEMPTS:
                 print(f"Board generation is taking too long at fill percent {100.0 * currFillPercent}%")
                 currFillPercent = 1.0 - (1.0 - DIFFICULTY_INCREMENT) * (1.0 - currFillPercent)

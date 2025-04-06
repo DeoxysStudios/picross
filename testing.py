@@ -1,35 +1,50 @@
 from gameobjects import Game, STATES
 import unittest
 
-TESTROWNUMS: list[list[int]] = [
-    [2],
-    [1, 2],
-    [3],
-    [3],
-    [1, 2]
+TESTBOARD = [
+    [-1, -1, 0, -1, 0],
+    [-1, -1, 1, -1, 1],
+    [-1, -1, 0, 1, 0],
+    [0, -1, 0, -1, -1],
+    [0, -1, 0, -1, -1]
 ]
-TESTCOLNUMS: list[list[int]] = [
+
+SOLUTION = [
+    [-1, -1, 0, -1, 0],
+    [-1, -1, 1, -1, 1],
+    [-1, -1, 0, 1, 0],
+    [0, -1, 0, -1, -1],
+    [0, -1, 1, -1, -1]
+]
+
+COUNTERBOARD = [
+    [-1, -1, 0, -1, 0],
+    [-1, -1, 1, -1, 1],
+    [-1, -1, 0, 1, 0],
+    [0, -1, 0, -1, -1],
+    [0, -1, -1, -1, -1]
+]
+
+TESTROWS = [
+    [1],
+    [0],
     [2, 1],
-    [1, 1],
-    [1, 3],
-    [1, 2],
-    [1, 1]
+    [1],
+    [2]
 ]
-VISUALS: dict[int, str] = {
-    STATES["UNKNOWN"]: "?",
-    STATES["FLAGGED"]: "X",
-    STATES["MINED"]: "O"
-}
+
+TESTCOLS = [
+    [1],
+    [1, 1],
+    [2],
+    [1],
+    [1]
+]
 
 
-def printBoard(board: list[list[int]]):
-    for y in range(len(board[0])):
-        for x in range(len(board)):
-            print(VISUALS[board[x][y]], end = "")
-        print("")
-    return
-
-newBoard = Game.solveBoard(TESTROWNUMS, TESTCOLNUMS)
-printBoard(newBoard)
-print(f"is valid: {Game.validateBoard(TESTROWNUMS, TESTCOLNUMS)}")
-printBoard(Game.generateBoard())
+board1 = Game.solveBoard(TESTROWS, TESTCOLS, SOLUTION)
+board2 = Game.solveBoard(TESTROWS, TESTCOLS, COUNTERBOARD)
+Game.printBoard(board1)
+print("-----")
+Game.printBoard(board2)
+print(Game.boardIsSolvable(TESTROWS, TESTCOLS, COUNTERBOARD))
