@@ -179,13 +179,15 @@ class Game(boards.SingleBoard):
     
     def tick(self):
         buttons = self.mouse_buttons()
+        digging = buttons[0] or self.is_pressed(32)
+        flagging = buttons[2] or self.is_pressed(1073742049)
         button: int = 0
-        if not buttons[0] and not buttons[2]:
+        if not digging and not flagging:
             self.previous_mouse_positions.clear()
             return
-        if buttons[0] and buttons[2]:
+        if digging and flagging:
             return
-        if buttons[2]:
+        if flagging:
             button = 2
         x, y = self.mouse_position()
         i, j = self.coords_to_cell(x, y)
