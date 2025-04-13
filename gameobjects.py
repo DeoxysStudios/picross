@@ -24,7 +24,7 @@ MAX_MISTAKES: int = 3
 LARGE_OUTLINE_THICKNESS: int = 2
 MAX_GENERATE_ATTEMPTS: int = 64
 MAX_UNKNOWN_TOLERANCE: int = 8
-DIFFICULTY_INCREMENT: float = 0.01
+DIFFICULTY_INCREMENT: float = 0.05
 HEALTH_ICON: str = "X"
 COLORS = {
     "UNKNOWN" : color.WHITE,
@@ -145,6 +145,7 @@ class Number():
 class Game(boards.SingleBoard):
     
     def __init__(self):
+        print("Loading...")
         self.validBoard = Game.generateBoard()
         self.health: int = MAX_MISTAKES
         self.progress: int = 0
@@ -477,10 +478,8 @@ class Game(boards.SingleBoard):
                 new_board[-1].append(STATES["MINED"] if random.random() <= currFillPercent else STATES["FLAGGED"])
         while not Game.boardIsSolvable(Game.getListRowNums(new_board), Game.getListColNums(new_board)):
             if attempts == MAX_GENERATE_ATTEMPTS:
-                print(f"Board generation is taking too long at fill percent {100.0 * currFillPercent}%")
                 currFillPercent = 1.0 - (1.0 - DIFFICULTY_INCREMENT) * (1.0 - currFillPercent)
                 attempts = 0
-                print(f"Raising fill percent to {100.0 * currFillPercent}%")
             attempts += 1
             for i in range(WIDTH):
                 for j in range(HEIGHT):
